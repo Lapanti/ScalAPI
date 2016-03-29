@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import scala.reflect.runtime.universe._
+import scala.collection.JavaConverters._
 
 /**
  * Created by Lapanti on 07.03.16.
@@ -27,15 +28,16 @@ object ServerListener {
     }
 
   def endpoints = {
+    val ws = (ServiceLoader load classOf[Endpoint]).asScala
+    Console println s"In endpoints, ${ws}"
+    for (w <- ws) {
+      Console println s"Objectpath of ${w.getClass} is ${w.objectPath}"
+    }
+
     typeOf[Endpoint].members.toList.map(_.asClass)
   }
 
   def main(args: Array[String]){
-
-    val ws = (ServiceLoader load classOf[Endpoint]).asScala
-    for (w <- ws) {
-      Console println s"Turn a ${w.getClass} by ${w.turn}"
-    }
 
     val port = args match {
       case Array(x, _*) => x.toInt
