@@ -1,14 +1,12 @@
 package scalapi.server
 
-import java.util.ServiceLoader
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import scala.io.StdIn
-import scala.reflect.runtime.universe._
+import org.reflections.Reflections
 import scala.collection.JavaConverters._
+import scala.io.StdIn
 
 /**
  * Created by Lapanti on 07.03.16.
@@ -27,14 +25,9 @@ object ServerListener {
       }
     }
 
-  def endpoints = {
-    val ws = (ServiceLoader load classOf[Endpoint]).asScala
-    Console println s"In endpoints, ${ws}"
-    for (w <- ws) {
-      Console println s"Objectpath of ${w.getClass} is ${w.objectPath}"
-    }
-
-    typeOf[Endpoint].members.toList.map(_.asClass)
+  def endpoints: List[Class[_ <: Endpoint]] = {
+    val refl = new Reflections()
+    refl.getSubTypesOf(classOf[Endpoint]).asScala.toList
   }
 
   def main(args: Array[String]){

@@ -13,8 +13,10 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
-    "org.scala-lang" % "scala-reflect" % "2.11.7",
-    "org.specs2" %% "specs2-core" % "3.7.2" % "test"
+    "org.specs2" %% "specs2-core" % "3.7.2" % "test",
+    // Dependencies for reflection
+    "org.reflections" % "reflections" % "0.9.10",
+    "com.google.code.findbugs" % "annotations" % "2.0.1"
   )
 }
 
