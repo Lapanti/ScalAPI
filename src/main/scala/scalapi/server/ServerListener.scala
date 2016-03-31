@@ -1,12 +1,17 @@
+package scalapi.server
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import org.reflections.Reflections
+import scala.collection.JavaConverters._
+import scala.io.StdIn
 
 /**
- * Created by llav on 07/03/16.
+ * Created by Lapanti on 07.03.16.
  */
-object Server {
+object ServerListener {
   implicit val system = ActorSystem("scalapi-actors")
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
@@ -20,8 +25,12 @@ object Server {
       }
     }
 
-  def main (args: Array[String]){
-    
+  def endpoints: List[Class[_ <: Endpoint]] = {
+    val refl = new Reflections()
+    refl.getSubTypesOf(classOf[Endpoint]).asScala.toList
+  }
+
+  def main(args: Array[String]){
 
     val port = args match {
       case Array(x, _*) => x.toInt
@@ -31,7 +40,7 @@ object Server {
     val bindingFuture = Http().bindAndHandle(route, "localhost", port)
 
     println(s"Server online at port $port, press RETURN to stop")
-    Console.readLine()
+    StdIn.readLine()
     bindingFuture
       .flatMap(_.unbind())
       .onComplete(_ => system.terminate())
