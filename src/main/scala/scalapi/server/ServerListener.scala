@@ -2,11 +2,15 @@ package scalapi.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import org.reflections.Reflections
 import scala.collection.JavaConverters._
+import scala.concurrent.Future
 import scala.io.StdIn
+import scalapi.server.response.HttpResponse
 
 /**
  * Created by Lapanti on 07.03.16.
@@ -16,18 +20,24 @@ object ServerListener {
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  val route =
-    path("hello") {
-      get {
+  def endpoints: List[(String, Directive0, ToResponseMarshallable)] = {
+    val refl = new Reflections()
+    refl.getSubTypesOf(classOf[Endpoint]).asScala.toList.flatMap{ aClass =>
+      aClass.getDeclaredMethods.toList.filter(_.getReturnType == classOf[HttpResponse]).map{ method =>
+        val returnType = method.getReturnType.asInstanceOf[HttpResponse]
+        (s"${aClass.getName}/${method.getName}", returnType.directive, method.asInstanceOf[ToResponseMarshallable])
+      }
+    }
+  }
+
+  val route = endpoints.map{ case (route, httpMethod, function) =>
+    path(route) {
+      httpMethod {
         complete {
-          "Hello"
+          function
         }
       }
     }
-
-  def endpoints: List[Class[_ <: Endpoint]] = {
-    val refl = new Reflections()
-    refl.getSubTypesOf(classOf[Endpoint]).asScala.toList
   }
 
   def main(args: Array[String]){
@@ -37,12 +47,12 @@ object ServerListener {
       case _ => 8080
     }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", port)
+    val bindingFuture = route.map{ singleRoute =>
+      Http().bindAndHandle(singleRoute, "localhost", port)
+    }
 
     println(s"Server online at port $port, press RETURN to stop")
     StdIn.readLine()
-    bindingFuture
-      .flatMap(_.unbind())
-      .onComplete(_ => system.terminate())
+    Future.sequence(bindingFuture.map(_.flatMap(_.unbind()))).onComplete(_ => system.terminate())
   }
 }

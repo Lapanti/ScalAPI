@@ -9,7 +9,7 @@ import server.helpers.{TestUser2, TestUser}
   */
 class EndpointSpec extends Specification {
 
-  "A \"TestUser\" class's objectPath extending Endpoint" should {
+  "A \"TestUser\"" should {
     (new TestUser).objectPath mustEqual "testuser"
   }
 
