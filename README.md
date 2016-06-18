@@ -11,4 +11,4 @@ Framework for building RESTful APIs (earliest stage, version 0.0)
 
 ## Acknowledgements
 
-[![chilicorn](chilicorn.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities)
+[![chilicorn](chilicorn.png)](http://futurice.com/blog/sponsoring-free-time-open-source-activities)
