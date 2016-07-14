@@ -23,9 +23,14 @@ object ServerListener {
   def endpoints: List[(String, Directive0, ToResponseMarshallable)] = {
     val refl = new Reflections()
     refl.getSubTypesOf(classOf[Endpoint]).asScala.toList.flatMap{ aClass =>
-      aClass.getDeclaredMethods.toList.filter(_.getReturnType == classOf[HttpResponse]).map{ method =>
-        val returnType = method.getReturnType.asInstanceOf[HttpResponse]
-        (s"${aClass.getName}/${method.getName}", returnType.directive, method.asInstanceOf[ToResponseMarshallable])
+      val classUrl = aClass.newInstance().objectPath
+      val declaredMethods = aClass.getDeclaredMethods
+      println(s"Class $aClass name $classUrl methods ${declaredMethods.map(_.getReturnType.getSuperclass.getName).mkString}")
+      declaredMethods.filter(_.getReturnType.getSuperclass == classOf[HttpResponse]).map{ method =>
+        println(s"Method $method name ${method.getName} class ${method.getReturnType.asSubclass(classOf[HttpResponse])}")
+        val returnType = method.getReturnType.newInstance
+        println(s"Return $returnType directive ${returnType.getClass}")
+        (s"$classUrl/${method.getName}", get, method.asInstanceOf[ToResponseMarshallable])
       }
     }
   }
